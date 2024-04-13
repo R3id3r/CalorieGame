@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>3D Avatar Customization</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- Make sure to match the version number of GLTFLoader with your Three.js version -->
+<script src="https://cdn.jsdelivr.net/npm/three/examples/js/loaders/GLTFLoader.js"></script>
+
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Basic setup for Three.js
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0x404040); // Soft white light
+        scene.add(ambientLight);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        scene.add(directionalLight);
+
+        // Avatar and clothing models (placeholders)
+        let avatarMesh, clothingMesh;
+
+        // Load models (Assuming the use of GLTFLoader)
+        // You'll need to include GLTFLoader via a script tag or module import
+        // Assuming the correct Three.js and GLTFLoader scripts are included in the HTML
+
+const loader = new THREE.GLTFLoader();
+loader.load('path/to/avatarModel.glb', function(gltf) {
+    avatarMesh = gltf.scene;
+    scene.add(avatarMesh);
+    // Optionally set the avatar position or other properties
+});
+
+// Updated function to change clothing
+function changeClothing(clothingPath) {
+    if (clothingMesh) {
+        scene.remove(clothingMesh); // Remove current clothing if any
+    }
+    loader.load(clothingPath, function(gltf) {
+        clothingMesh = gltf.scene;
+        scene.add(clothingMesh);
+        // Adjust the position or scale of clothingMesh if needed
+    });
+}
+
+
+        camera.position.z = 5;
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            // Any animations or updates go here
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Example usage:
+        // changeClothing('path/to/newClothingModel.glb');
+    </script>
+</body>
+</html>

@@ -1,0 +1,436 @@
+class Machinery(models.Model):
+    TYPE_CHOICES = (
+        ('TRACTOR', 'Tractor'),
+        ('HARVESTER', 'Harvester'),
+        ('PLOW', 'Plow'),
+        ('SEEDER', 'Seeder'),
+        ('SPRAYER', 'Sprayer'),
+        # Add more machinery types as needed
+    )
+    STATUS_CHOICES = (
+        ('OPERATIONAL', 'Operational'),
+        ('UNDER_REPAIR', 'Under Repair'),
+        ('OUT_OF_SERVICE', 'Out of Service'),
+    )
+
+    name = models.CharField(max_length=255)
+    machinery_type = models.CharField(max_length=50, choices=TYPE_CHOICES)
+    manufacturer = models.CharField(max_length=255)
+    purchase_date = models.DateField()
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES)
+    last_service_date = models.DateField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.manufacturer}"
+
+class MaintenanceRecord(models.Model):
+    machinery = models.ForeignKey(Machinery, on_delete=models.CASCADE, related_name='maintenance_records')
+    service_date = models.DateField()
+    service_details = models.TextField()
+    next_service_due = models.DateField()
+
+    def __str__(self):
+        return f"Service for {self.machinery.name} on {self.service_date}"
+
+class GardeningTool(models.Model):
+    TOOL_TYPE_CHOICES = (
+        ('HAND', 'Hand Tool'),
+        ('POWER', 'Power Tool'),
+        ('WATERING', 'Watering Equipment'),
+        ('PLANTING', 'Planting Equipment'),
+        # Add more tool types as needed
+    )
+    CONDITION_CHOICES = (
+        ('NEW', 'New'),
+        ('GOOD', 'Good'),
+        ('FAIR', 'Fair'),
+        ('POOR', 'Poor'),
+    )
+
+    name = models.CharField(max_length=255)
+    tool_type = models.CharField(max_length=50, choices=TOOL_TYPE_CHOICES)
+    purchase_date = models.DateField()
+    condition = models.CharField(max_length=50, choices=CONDITION_CHOICES)
+    description = models.TextField(blank=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.get_condition_display()}"
+
+class ToolMaintenanceRecord(models.Model):
+    tool = models.ForeignKey(GardeningTool, on_delete=models.CASCADE, related_name='maintenance_records')
+    maintenance_date = models.DateField()
+    maintenance_action = models.CharField(max_length=255)
+    details = models.TextField()
+
+    def __str__(self):
+        return f"Maintenance on {self.tool.name} ({self.maintenance_date})"
+
+class FarmingTask(models.Model):
+    TASK_TYPES = (
+        ('PLANTING', 'Planting'),
+        ('HARVESTING', 'Harvesting'),
+        ('FERTILIZING', 'Fertilizing'),
+        ('WATERING', 'Watering'),
+        ('PRUNING', 'Pruning'),
+        # Add more task types as needed
+    )
+    TASK_STATUS = (
+        ('PENDING', 'Pending'),
+        ('IN_PROGRESS', 'In Progress'),
+        ('COMPLETED', 'Completed'),
+        ('CANCELLED', 'Cancelled'),
+    )
+
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    task_type = models.CharField(max_length=50, choices=TASK_TYPES)
+    status = models.CharField(max_length=50, choices=TASK_STATUS, default='PENDING')
+    assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='assigned_tasks')
+    start_date = models.DateField()
+    end_date = models.DateField(blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.get_task_type_display()}"
+
+class TaskUpdate(models.Model):
+    task = models.ForeignKey(FarmingTask, on_delete=models.CASCADE, related_name='updates')
+    update_date = models.DateTimeField(auto_now_add=True)
+    update_note = models.TextField()
+
+    def __str__(self):
+        return f"Update for {self.task.name} on {self.update_date.strftime('%Y-%m-%d')}"
+    
+class FarmEmployee(models.Model):
+    JOB_TITLES = (
+        ('MANAGER', 'Manager'),
+        ('FARMHAND', 'Farmhand'),
+        ('TECHNICIAN', 'Technician'),
+        ('AGRONOMIST', 'Agronomist'),
+        # Add more job titles as needed
+    )
+
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    contact_number = models.CharField(max_length=15)
+    email = models.EmailField()
+    job_title = models.CharField(max_length=50, choices=JOB_TITLES)
+    start_date = models.DateField()
+    salary = models.DecimalField(max_digits=8, decimal_places=2)
+    notes = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} - {self.get_job_title_display()}"
+
+    @property
+    def full_name(self):
+        """Returns the full name of the employee."""
+        return f"{self.first_name} {self.last_name}"
+
+class FarmingCompany(models.Model):
+    COMPANY_TYPES = (
+        ('CROP', 'Crop Production'),
+        ('LIVESTOCK', 'Livestock Raising'),
+        ('DAIRY', 'Dairy Farming'),
+        ('POULTRY', 'Poultry Farming'),
+        ('AQUACULTURE', 'Aquaculture'),
+        # Additional types as needed
+    )
+
+    name = models.CharField(max_length=255)
+    address = models.TextField()
+    company_type = models.CharField(max_length=50, choices=COMPANY_TYPES)
+    contact_name = models.CharField(max_length=100, blank=True, null=True)
+    contact_email = models.EmailField(blank=True, null=True)
+    contact_phone = models.CharField(max_length=15, blank=True, null=True)
+    website = models.URLField(blank=True, null=True)
+    established_date = models.DateField()
+    description = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+
+from django.contrib.auth.models import User  # Assuming employees are represented by the User model
+# from .models import FarmingTask  # Uncomment if you have a separate FarmingTask model
+
+class AssignedTask(models.Model):
+    employee = models.ForeignKey(User, on_delete=models.CASCADE, related_name='assigned_tasks')
+    task = models.CharField(max_length=255)
+    task_description = models.TextField(blank=True, null=True)
+    start_datetime = models.DateTimeField()
+    end_datetime = models.DateTimeField()
+    status = models.CharField(max_length=100, choices=(('PENDING', 'Pending'), ('COMPLETED', 'Completed'), ('IN_PROGRESS', 'In Progress'), ('CANCELLED', 'Cancelled')), default='PENDING')
+    notes = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.task} assigned to {self.employee.username} on {self.start_datetime.strftime('%Y-%m-%d %H:%M')}"
+
+    class Meta:
+        ordering = ['start_datetime']
+
+class Asset(models.Model):
+    CATEGORY_CHOICES = (
+        ('PHYSICAL', 'Physical'),
+        ('INTANGIBLE', 'Intangible'),
+        ('FINANCIAL', 'Financial'),
+        # Add more categories as needed
+    )
+
+    STATUS_CHOICES = (
+        ('ACTIVE', 'Active'),
+        ('UNDER_MAINTENANCE', 'Under Maintenance'),
+        ('DECOMMISSIONED', 'Decommissioned'),
+        # Add more statuses as needed
+    )
+
+    name = models.CharField(max_length=255)
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
+    purchase_date = models.DateField()
+    value = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES)
+    location = models.CharField(max_length=255, blank=True, null=True)  # Optional for physical assets
+    description = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+
+class StockShare(models.Model):
+    SYMBOL_CHOICES = [
+        ('AAPL', 'Apple Inc.'),
+        ('GOOGL', 'Alphabet Inc.'),
+        ('MSFT', 'Microsoft Corporation'),
+        # Add more stock symbols as needed
+    ]
+    
+    name = models.CharField(max_length=255)
+    symbol = models.CharField(max_length=10, choices=SYMBOL_CHOICES)
+    purchase_date = models.DateField()
+    purchase_price = models.DecimalField(max_digits=10, decimal_places=2)
+    quantity = models.PositiveIntegerField()
+    current_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    owner = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='stock_shares')
+
+    def __str__(self):
+        return f"{self.name} ({self.symbol}) - {self.quantity} shares"
+
+    @property
+    def total_value(self):
+        """Calculate the total value of the stock holding."""
+        return self.current_price * self.quantity
+
+    @property
+    def profit_loss(self):
+        """Calculate the profit or loss from the stock holding."""
+        return (self.current_price - self.purchase_price) * self.quantity
+   
+class CommercialKitchen(models.Model):
+    name = models.CharField(max_length=255)
+    location = models.TextField()
+    hourly_rate = models.DecimalField(max_digits=6, decimal_places=2)
+    description = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+
+class Equipment(models.Model):
+    kitchen = models.ForeignKey(CommercialKitchen, on_delete=models.CASCADE, related_name='equipment')
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+    is_available = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.name} - {'Available' if self.is_available else 'Unavailable'}"
+
+class Reservation(models.Model):
+    kitchen = models.ForeignKey(CommercialKitchen, on_delete=models.CASCADE, related_name='reservations')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reservations')
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+    total_cost = models.DecimalField(max_digits=8, decimal_places=2, editable=False)
+
+    def save(self, *args, **kwargs):
+        duration_hours = (self.end_time - self.start_time).total_seconds() / 3600
+        self.total_cost = duration_hours * self.kitchen.hourly_rate
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Reservation by {self.user.username} on {self.start_time.strftime('%Y-%m-%d %H:%M')}"
+
+
+class Item(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    owner = models.ForeignKey(Player, related_name='items', on_delete=models.CASCADE)
+    is_sold = models.BooleanField(default=False)
+
+class Transaction(models.Model):
+    item = models.ForeignKey(Item, on_delete=models.CASCADE)
+    buyer = models.ForeignKey(Player, related_name='purchases', on_delete=models.CASCADE)
+    date = models.DateTimeField(auto_now_add=True)
+
+class Recipe(models.Model):
+    title = models.CharField(max_length=255)
+    #author = models.ForeignKey('auth.User', on_delete=models.CASCADE)
+    #created_at = models.DateTimeField(auto_now_add=True)
+    #updated_at = models.DateTimeField(auto_now=True)
+    cooking_time = models.PositiveIntegerField(help_text="Time in minutes")
+    description = models.TextField(blank=True, help_text="Short description of the recipe")
+    instructions = models.TextField(help_text="Step by step cooking instructions")
+    
+    def __str__(self):
+        return self.title
+
+class Ingredient(models.Model):
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name='ingredients')
+    name = models.CharField(max_length=100)
+    quantity = models.CharField(max_length=100, help_text="Include units, e.g., 1 cup, 2 tablespoons")
+
+    def __str__(self):
+        return f"{self.quantity} of {self.name} for {self.recipe.title}"
+
+
+class Human(models.Model):
+    dna_sequence = ""
+    ethnicity = []
+    nationality = ""
+    eye_color = ""
+    hair_color = ""
+    height = ""
+    weight = ""
+    date_of_birth = "d/m/y"
+    biological_parents = ManyToMany?
+    relatives = ManyToMany
+    sex = ["male", "female"]
+    blood_type = models.CharField(max_length=3, choices=(('A+', 'A+'), ('A-', 'A-'), ('B+', 'B+'), ('B-', 'B-'), ('AB+', 'AB+'), ('AB-', 'AB-'), ('O+', 'O+'), ('O-', 'O-')), blank=True)
+    allergies = []
+
+    class Meta:
+        abstract = True
+
+class Person(Human):
+    first_name = ""
+    middle_names = []
+    last_name = ""
+    preferred_name = ""
+    address = ManyToMany(Address)
+    skills = []
+    email = ""
+    phone_number = ""
+    gender = models.CharField(max_length=10, choices=(('male', 'Male'), ('female', 'Female'), ('other', 'Other')), blank=True)
+    pronouns = []
+    occupation = ""
+    employer = ""
+    marital_status = ""
+    drivers_license_number = ""
+    passport_number = ""
+    social_insurance_number = "" # social_security_number
+    emergency_contact_name = ""
+    emergency_contact_phone = ""
+    preferred_communication_method = ""
+    languages_spoken = []
+    hobbies = []
+    education = []
+
+class Address(models.Model):
+    unit = ""
+    street_number = ""
+    street_name = ""
+    city = ""
+    state = ""
+    postal_code = ""
+    country = ""
+
+class House(models.Model):
+    address = OneToOne(Address)
+    square_footage = ""
+    garage = False
+    beds = 0
+    baths = 0.0
+    land_location = ""
+    gps_location = {lat: "", long: ""}
+    build_date = "d/m/y"
+
+# Assuming the Item class definition is as provided earlier
+
+class Item(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+class Tool(Item):
+    tool_type = models.CharField(max_length=100, help_text="The type of tool, e.g., Hammer, Drill, Saw")
+    material = models.CharField(max_length=100, help_text="Primary material, e.g., Steel, Wood, Plastic")
+    
+    power_source = models.CharField(max_length=100, blank=True, null=True, help_text="Power source, e.g., Manual, Electric, Battery")
+    brand = models.CharField(max_length=100, help_text="Brand of the tool")
+    warranty_period_months = models.PositiveIntegerField(help_text="Warranty period in months")
+    is_outdoor = models.BooleanField(default=False, help_text="Indicates whether the tool is intended for outdoor use")
+
+    def __str__(self):
+        return f"{self.name} - {self.tool_type}"
+
+class FuturesContract(models.Model):
+    crop = models.ForeignKey(Crop, on_delete=models.CASCADE)
+    seller = models.ForeignKey(Player, related_name='contracts_as_seller', on_delete=models.CASCADE)
+    buyer = models.ForeignKey(Player, related_name='contracts_as_buyer', on_delete=models.SET_NULL, null=True, blank=True)
+    price_per_unit = models.DecimalField(max_digits=6, decimal_places=2)
+    quantity = models.IntegerField()
+    contract_date = models.DateField()
+    delivery_date = models.DateField()
+
+    def __str__(self):
+        return f"{self.crop.name} contract between {self.seller} and {self.buyer}"
+
+class Item(models.Model):
+    name = models.CharField(max_length=100, help_text="Brand of the tool")
+    description = models.TextField(max_length=1000, help_text="Item uses.")
+    weight_kg = models.DecimalField(max_digits=5, decimal_places=2, help_text="Weight of the tool in kilograms")
+    length_cm = models.DecimalField(max_digits=5, decimal_places=2, help_text="Length of the tool in centimeters", blank=True, null=True)
+    width_cm = models.DecimalField(max_digits=5, decimal_places=2, help_text="Width of the tool in centimeters", blank=True, null=True)
+    height_cm = models.DecimalField(max_digits=5, decimal_places=2, help_text="Height of the tool in centimeters", blank=True, null=True)
+    tradeable = models.BooleanField(default=False)
+    edible = models.BooleanField(default=False)
+    equipable = models.BooleanField(default=False) #wearable
+    members = models.BooleanField(default=False)
+    price = models.DecimalField(max_digits=6, decimal_places=2)
+    skill_level_required
+    buy_limit
+    sell_limit
+    
+    Icon
+    large_icon
+    type
+    type_icon
+    recipe = ForeignKey(Recipe, related_name='item_recipe', on_delete=models.CASCADE)
+
+class FinancialStatement(models.Model):
+    date = models.DateField()
+    title = models.CharField(max_length=255)
+    company_name = models.CharField(max_length=255)
+
+    class Meta:
+        abstract = True  # Makes this an abstract base class
+
+    def __str__(self):
+        return f"{self.title} for {self.company_name} on {self.date}"
+
+class BalanceSheet(FinancialStatement):
+    total_assets = models.DecimalField(max_digits=20, decimal_places=2)
+    current_assets = models.DecimalField(max_digits=20, decimal_places=2, help_text="Assets that are expected to be converted into cash within one year")
+    non_current_assets = models.DecimalField(max_digits=20, decimal_places=2, help_text="Assets not expected to be converted into cash within one year")
+    total_liabilities = models.DecimalField(max_digits=20, decimal_places=2)
+    total_equity = models.DecimalField(max_digits=20, decimal_places=2)
+
+    def __str__(self):
+        return f"Balance Sheet for {self.company_name} on {self.date}"
+
+    def save(self, *args, **kwargs):
+        # Ensure that total_assets is the sum of current and non-current assets before saving
+        self.total_assets = self.current_assets + self.non_current_assets
+        super(BalanceSheet, self).save(*args, **kwargs)

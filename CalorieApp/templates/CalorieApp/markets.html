@@ -1,0 +1,55 @@
+{% extends "CalorieApp/base.html" %}
+
+
+{% block content %}
+<head>
+    <title>Game Market</title>
+    <style>
+        .market-container {
+            margin: 20px;
+        }
+        .search-bar {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="market-container">
+    <h2>Marketplace</h2>
+    <div class="search-bar">
+        <input type="text" class="form-control" id="itemSearch" placeholder="Search for items...">
+    </div>
+    <div class="item-list">
+        <!-- Dynamically populated list of items -->
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Item</th>
+                    <th scope="col">Price</th>
+                    <th scope="col">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Example item -->
+                <tr>
+                    <th scope="row">1</th>
+                    <td>Legendary Sword</td>
+                    <td>100 Gold</td>
+                    <td>
+                        <button type="button" class="btn btn-success">Buy</button>
+                        <button type="button" class="btn btn-danger">Sell</button>
+                    </td>
+                </tr>
+                <!-- More items would be added here -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+{% endblock content %}

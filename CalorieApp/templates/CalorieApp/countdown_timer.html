@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Table Countdown Timer</title>
+<style>
+    body { font-family: Arial, sans-serif; }
+    table { width: 80%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 8px; border: 1px solid #ddd; }
+</style>
+</head>
+<body>
+
+<h2>Countdown Timers</h2>
+<table id="countdownTable">
+    <tr>
+        <th>Event</th>
+        <th>Countdown</th>
+    </tr>
+    <tr>
+        <td>Retirement</td>
+        <td data-countdown="Jan 1, 2057 00:00:00"></td>
+    </tr>
+    <tr>
+        <td>Product Launch</td>
+        <td data-countdown="Jan 15, 2025 12:00:00"></td>
+    </tr>
+    <!-- Add more rows as needed -->
+</table>
+
+<script>
+(function() {
+    function updateCountdowns() {
+        var rows = document.querySelectorAll('#countdownTable tr');
+
+        rows.forEach(function(row, index) {
+            if(index === 0) return; // Skip the header row
+            
+            var countdownCell = row.cells[1]; // Assuming countdown is in the second column
+            var countDownDate = new Date(countdownCell.getAttribute('data-countdown')).getTime();
+
+            var now = new Date().getTime();
+            console.log(now)
+            var distance = countDownDate - now;
+
+            if (distance < 0) {
+                countdownCell.innerHTML = "EXPIRED";
+                return;
+            }
+
+            var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            countdownCell.innerHTML = days + "d " + hours + "h " + minutes + "m " + seconds + "s";
+        });
+    }
+
+    // Update countdown every 1 second
+    setInterval(updateCountdowns, 1000);
+})();
+</script>
+
+</body>
+</html>

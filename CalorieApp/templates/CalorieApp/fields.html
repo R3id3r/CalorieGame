@@ -1,0 +1,201 @@
+{% extends "CalorieApp/base.html" %}
+{% load static %}
+{% block content %}
+    <head>
+        <title>Fields</title>
+        <link href="css/sb-admin-2.min.css" rel="stylesheet">
+        <link href="vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+    </head>
+
+    <body>
+          <table class="sortable table table-hover" id="fieldsTable">
+            <thead>
+              <tr>
+                <th scope="col" onclick="sortTable(0)">Field #</th>
+                <th scope="col" onclick="sortTable(1)">Name</th>
+                <th scope="col">Crop</th>
+                <th scope="col">DTM</th>
+                <th scope="col">N</th>
+                <th scope="col">P</th>
+                <th scope="col">K</th>
+                <th scope="col">Calories</th>
+                <th scope="col">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+                {% for field in fields %}
+              <tr>
+                <td scope="row">{{ forloop.counter }}</td>
+                <td>{{ field.name }}</td>
+                {% for planting in plantings %}
+                {% if planting.field.id == field.id %}
+                <td>{{ planting.seed.crop.name }}s</td>
+                <td data-harvest-date="{{ planting.harvest_date }}"></td>
+                {% endif %}
+                {% endfor %}
+                
+                <td>50</td>
+                <td>30</td>
+                <td>45</td>
+                <td>13,000</td>
+                <td>
+                  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+                    Plant
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+
+
+
+
+
+<!-- Button trigger modal -->
+
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        ...
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+          
+
+          <script>
+            function sortTable(n) {
+              var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+              table = document.getElementById("fieldsTable");
+              switching = true;
+              // Set the sorting direction to ascending:
+              dir = "asc";
+              /* Make a loop that will continue until
+              no switching has been done: */
+              while (switching) {
+                // Start by saying: no switching is done:
+                switching = false;
+                rows = table.rows;
+                /* Loop through all table rows (except the
+                first, which contains table headers): */
+                for (i = 1; i < (rows.length - 1); i++) {
+                  // Start by saying there should be no switching:
+                  shouldSwitch = false;
+                  /* Get the two elements you want to compare,
+                  one from current row and one from the next: */
+                  x = rows[i].getElementsByTagName("TD")[n];
+                  y = rows[i + 1].getElementsByTagName("TD")[n];
+                  /* Check if the two rows should switch place,
+                  based on the direction, asc or desc: */
+                  if (dir == "asc") {
+                    if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                      // If so, mark as a switch and break the loop:
+                      shouldSwitch = true;
+                      break;
+                    }
+                  } else if (dir == "desc") {
+                    if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                      // If so, mark as a switch and break the loop:
+                      shouldSwitch = true;
+                      break;
+                    }
+                  }
+                }
+                if (shouldSwitch) {
+                  /* If a switch has been marked, make the switch
+                  and mark that a switch has been done: */
+                  rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                  switching = true;
+                  // Each time a switch is done, increase this count by 1:
+                  switchcount ++;
+                } else {
+                  /* If no switching has been done AND the direction is "asc",
+                  set the direction to "desc" and run the while loop again. */
+                  if (switchcount == 0 && dir == "asc") {
+                    dir = "desc";
+                    switching = true;
+                  }
+                }
+              }
+            }
+            </script>
+
+
+
+<script>
+  (function() {
+      function updateCountdowns() {
+          var rows = document.querySelectorAll('#fieldsTable tr');
+  
+          rows.forEach(function(row, index) {
+              if(index === 0) return; // Skip the header row
+              
+              var countdownCell = row.cells[3]; // Assuming countdown is in the second column
+              //var countDownDate = new Date(countdownCell.getAttribute('data-harvest-date')).getTime();
+
+              //remove AM/PM from time
+              var timeData = countdownCell.getAttribute('data-harvest-date').split(' ')
+              var newTime = timeData[0] + " " + timeData[1] + " " + timeData[2] + " " + timeData[3]
+              var countDownDate = new Date(newTime).getTime()
+              
+              var now = new Date().getTime();
+              console.log(now)
+              var distance = countDownDate - now;
+  
+              if (distance < 0) {
+                  countdownCell.innerHTML = "Ready for harvest";
+                  return;
+              }
+  
+              var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+              var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+              var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+              var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+  
+              countdownCell.innerHTML = days + "d " + hours + "h " + minutes + "m " + seconds + "s";
+          });
+      }
+  
+      // Update countdown every 1 second
+      setInterval(updateCountdowns, 1000);
+  })();
+  </script>
+    </body>
+
+{% endblock content %}
+
+<!-- <td>
+    <p class="card-title d-inline-flex gap-1">
+        <a class="btn btn-primary" data-bs-toggle="collapse" href="#tablecollapse" role="button" aria-expanded="false" aria-controls="collapseExample">
+          ">"
+        </a>
+      </p> 
+</td>
+
+</tr>
+<tr class="collapse" id="tablecollapse">
+    <td colspan="7">
+      <p>table data</p>
+      <p>table data</p>
+      <p>table data</p>
+      <p>table data</p>
+    </td>
+</tr> -->
